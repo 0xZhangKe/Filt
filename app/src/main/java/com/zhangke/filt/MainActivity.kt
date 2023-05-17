@@ -4,7 +4,11 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
 import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.components.SingletonComponent
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -19,7 +23,7 @@ class MainActivity : AppCompatActivity() {
 
         val infoText = findViewById<TextView>(R.id.info)
         findViewById<View>(R.id.btn).setOnClickListener {
-            infoText.text = resolverList.joinToString(", ") { it.resolve("").title }
+            infoText.text = resolverList.joinToString("\n") { it.resolve("42") }
         }
     }
 }
