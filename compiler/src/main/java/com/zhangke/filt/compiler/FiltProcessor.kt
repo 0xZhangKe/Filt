@@ -48,8 +48,6 @@ class FiltVisitor(
     private val badSuperTypeName = Any::class.qualifiedName
 
     override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
-        logger.warn("---------start process $classDeclaration--------")
-
         val targetInterfaceType = findSuperInterfaceType(classDeclaration)
         val installInComponent = findInstallInComponent(classDeclaration)
 
