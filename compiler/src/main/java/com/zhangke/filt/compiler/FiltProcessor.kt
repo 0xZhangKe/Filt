@@ -101,7 +101,7 @@ class FiltVisitor(
         val installInFromAnnotation = filtAnnotation.findArgumentTypeByName("installIn")
             ?.takeIf { it != badTypeName }
         if (installInFromAnnotation != null) return installInFromAnnotation
-        return "dagger.hilt.android.components.ActivityComponent"
+        return "dagger.hilt.components.SingletonComponent"
     }
 
     private fun generateDaggerModuleClass(
