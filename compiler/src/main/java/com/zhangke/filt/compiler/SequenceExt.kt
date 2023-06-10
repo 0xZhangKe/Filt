@@ -1,6 +1,6 @@
 package com.zhangke.filt.compiler
 
-fun Sequence<Any>.isSingleElement(): Boolean {
+internal fun Sequence<Any>.isSingleElement(): Boolean {
     val iterator = iterator()
     if (iterator.hasNext()) {
         iterator.next()

@@ -101,7 +101,7 @@ class FiltVisitor(
         val installInFromAnnotation = filtAnnotation.findArgumentTypeByName("installIn")
             ?.takeIf { it != badTypeName }
         if (installInFromAnnotation != null) return installInFromAnnotation
-        return "dagger.hilt.components.SingletonComponent"
+        return "dagger.hilt.android.components.ActivityComponent"
     }
 
     private fun generateDaggerModuleClass(
@@ -110,11 +110,11 @@ class FiltVisitor(
         superTypeName: String,
         installInTypeName: String,
     ) {
+        val generateClassName = className + "BindModule"
         val fileSpec = FileSpec.builder(
             packageName = packageName,
             fileName = className,
         ).apply {
-            val generateClassName = className + "BindModule"
             val (superPackage, superClassName) = ClassNameUtils.splitPackageAndName(superTypeName)
             addType(
                 TypeSpec.classBuilder(ClassName(packageName, generateClassName))
@@ -142,7 +142,7 @@ class FiltVisitor(
         codeGenerator.createNewFile(
             dependencies = Dependencies(aggregating = false),
             packageName = packageName,
-            fileName = className,
+            fileName = generateClassName,
         ).use { os ->
             os.writer().use { fileSpec.writeTo(it) }
         }

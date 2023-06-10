@@ -1,6 +1,6 @@
 package com.zhangke.filt.compiler
 
-object ClassNameUtils {
+internal object ClassNameUtils {
 
     fun splitPackageAndName(
         qualifiedName: String
