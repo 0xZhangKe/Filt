@@ -52,8 +52,7 @@ class FiltVisitor(
         val installInComponent = findInstallInComponent(classDeclaration)
 
         generateDaggerModuleClass(
-            packageName = classDeclaration.packageName.asString(),
-            className = classDeclaration.simpleName.asString(),
+            classDeclaration = classDeclaration,
             superTypeName = targetInterfaceType,
             installInTypeName = installInComponent,
         )
@@ -105,11 +104,12 @@ class FiltVisitor(
     }
 
     private fun generateDaggerModuleClass(
-        packageName: String,
-        className: String,
+        classDeclaration: KSClassDeclaration,
         superTypeName: String,
         installInTypeName: String,
     ) {
+        val packageName = classDeclaration.packageName.asString()
+        val className = classDeclaration.simpleName.asString()
         val generateClassName = className + "BindModule"
         val fileSpec = FileSpec.builder(
             packageName = packageName,
@@ -140,7 +140,7 @@ class FiltVisitor(
         }.build()
 
         codeGenerator.createNewFile(
-            dependencies = Dependencies(aggregating = false),
+            dependencies = Dependencies(aggregating = true, classDeclaration.containingFile!!),
             packageName = packageName,
             fileName = generateClassName,
         ).use { os ->
