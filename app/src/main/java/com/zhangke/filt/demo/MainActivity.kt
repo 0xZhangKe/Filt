@@ -1,9 +1,10 @@
-package com.zhangke.filt
+package com.zhangke.filt.demo
 
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.zhangke.filt.R
 import dagger.hilt.android.AndroidEntryPoint
 import java.io.File
 import javax.inject.Inject

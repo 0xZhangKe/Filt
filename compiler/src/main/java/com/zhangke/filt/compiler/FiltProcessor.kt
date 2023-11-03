@@ -7,8 +7,11 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
+import com.google.devtools.ksp.symbol.FileLocation
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSDeclaration
+import com.google.devtools.ksp.symbol.KSFile
 import com.google.devtools.ksp.symbol.KSVisitorVoid
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
@@ -20,6 +23,7 @@ import com.zhangke.filt.annotaions.Filt
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoSet
+import java.io.File
 
 class FiltProcessorProvider : SymbolProcessorProvider {
 
@@ -48,27 +52,27 @@ class FiltVisitor(
     private val badSuperTypeName = Any::class.qualifiedName
 
     override fun visitClassDeclaration(classDeclaration: KSClassDeclaration, data: Unit) {
-        val targetInterfaceType = findSuperInterfaceType(classDeclaration)
+        val targetInterfaceDeclaration = findSuperInterfaceType(classDeclaration)
         val installInComponent = findInstallInComponent(classDeclaration)
 
         generateDaggerModuleClass(
             classDeclaration = classDeclaration,
-            superTypeName = targetInterfaceType,
+            superTypeDeclaration = targetInterfaceDeclaration,
             installInTypeName = installInComponent,
         )
     }
 
-    private fun findSuperInterfaceType(classDeclaration: KSClassDeclaration): String {
+    private fun findSuperInterfaceType(classDeclaration: KSClassDeclaration): KSDeclaration {
         val className = classDeclaration.qualifiedName?.asString().orEmpty()
         val filtAnnotation = classDeclaration.requireAnnotation<Filt>()
-        val typeFromAnnotation = filtAnnotation.findArgumentTypeByName("type")
-            ?.takeIf { it != badTypeName }
+        val typeFromAnnotation = filtAnnotation.findArgumentTypeDeclarationByName("type")
+            ?.takeIf { it.qualifiedName?.asString() != badTypeName }
         if (typeFromAnnotation != null) {
             val superTypesIterator = classDeclaration.superTypes.iterator()
             var find = false
             while (superTypesIterator.hasNext()) {
                 val type = superTypesIterator.next()
-                if (type.typeQualifiedName == typeFromAnnotation) {
+                if (type.typeQualifiedName == typeFromAnnotation.qualifiedName?.asString()) {
                     find = true
                     break
                 }
@@ -81,13 +85,15 @@ class FiltVisitor(
             return typeFromAnnotation
         }
         if (classDeclaration.superTypes.isSingleElement()) {
-            val superTypeName = classDeclaration.superTypes
+            val superTypeDeclaration = classDeclaration.superTypes
                 .iterator()
                 .next()
-                .typeQualifiedName
-                ?.takeIf { it != badSuperTypeName }
-            if (!superTypeName.isNullOrEmpty()) {
-                return superTypeName
+                .takeIf {
+                    val name = it.typeQualifiedName
+                    !name.isNullOrEmpty() && name != badSuperTypeName
+                }?.resolve()?.declaration
+            if (superTypeDeclaration != null) {
+                return superTypeDeclaration
             }
         }
         val errorMessage = "Can't find Filt type from $className"
@@ -105,7 +111,7 @@ class FiltVisitor(
 
     private fun generateDaggerModuleClass(
         classDeclaration: KSClassDeclaration,
-        superTypeName: String,
+        superTypeDeclaration: KSDeclaration,
         installInTypeName: String,
     ) {
         val packageName = classDeclaration.packageName.asString()
@@ -115,6 +121,7 @@ class FiltVisitor(
             packageName = packageName,
             fileName = className,
         ).apply {
+            val superTypeName = superTypeDeclaration.qualifiedName?.asString()!!
             val (superPackage, superClassName) = ClassNameUtils.splitPackageAndName(superTypeName)
             addType(
                 TypeSpec.classBuilder(ClassName(packageName, generateClassName))
@@ -140,7 +147,11 @@ class FiltVisitor(
         }.build()
 
         codeGenerator.createNewFile(
-            dependencies = Dependencies(aggregating = true, classDeclaration.containingFile!!),
+            dependencies = Dependencies(
+                aggregating = true,
+                classDeclaration.containingFile!!,
+                superTypeDeclaration.containingFile!!,
+            ),
             packageName = packageName,
             fileName = generateClassName,
         ).use { os ->

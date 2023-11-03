@@ -13,3 +13,9 @@ internal fun KSAnnotation.findArgumentTypeByName(name: String): String? {
         ?.qualifiedName
         ?.asString()
 }
+
+internal fun KSAnnotation.findArgumentTypeDeclarationByName(name: String): KSDeclaration? {
+    return arguments.firstOrNull { it.name?.asString() == name }?.value
+        ?.let { it as? KSType }
+        ?.declaration
+}

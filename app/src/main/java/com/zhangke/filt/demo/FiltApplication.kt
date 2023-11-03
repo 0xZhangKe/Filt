@@ -1,4 +1,4 @@
-package com.zhangke.filt
+package com.zhangke.filt.demo
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

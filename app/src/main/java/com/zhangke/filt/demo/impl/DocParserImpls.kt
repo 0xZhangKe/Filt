@@ -1,16 +1,11 @@
-package com.zhangke.filt
+package com.zhangke.filt.demo.impl
 
 import com.zhangke.filt.annotaions.Filt
+import com.zhangke.filt.demo.DocParser
 import dagger.hilt.android.components.ActivityComponent
-import dagger.hilt.android.components.ViewModelComponent
-import dagger.hilt.components.SingletonComponent
 import java.io.File
 import javax.inject.Inject
 
-interface DocParser {
-
-    fun parse(file: File): String
-}
 
 @Filt(installIn = ActivityComponent::class)
 class HtmlParser @Inject constructor() : DocParser {
